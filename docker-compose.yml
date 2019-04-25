@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  sampleappsasmicroservice:
+    image: sampleappsasmicroservice
+    build:
+      context: .
+      dockerfile: SampleAppsAsMicroService\Dockerfile
