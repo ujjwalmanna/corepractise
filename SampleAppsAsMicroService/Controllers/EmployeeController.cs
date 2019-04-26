@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using SampleAppsAsMicroService.Models;
 using SampleAppsAsMicroService.Repositories;
 
@@ -12,6 +16,7 @@ using SampleAppsAsMicroService.Repositories;
 namespace SampleAppsAsMicroService.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class EmployeeController : Controller
     {
         private readonly IRepository<JobRole, int> _jobRepository;
@@ -25,6 +30,7 @@ namespace SampleAppsAsMicroService.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            WriteIdentityInfo().Wait();
             var employees = _employeeRepository.All();
             return new OkObjectResult(employees);
         }
@@ -53,6 +59,16 @@ namespace SampleAppsAsMicroService.Controllers
         {
             var jobRoles = _jobRepository.All();
             return new OkObjectResult(jobRoles);
+        }
+
+        public async Task WriteIdentityInfo()
+        {
+            var iToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
+            Debug.WriteLine($"identity token =>{iToken}");
+            foreach (var claim in User.Claims)
+            {
+                Debug.WriteLine($"claim type =>{claim.Type}  value =>{claim.Value}");
+            }
         }
     }
 }

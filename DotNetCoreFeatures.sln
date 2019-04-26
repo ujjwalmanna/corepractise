@@ -9,9 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core.Entity", "Core.Entity\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DefaultIdentity", "DefaultIdentity\DefaultIdentity.csproj", "{7F5BD60F-3B28-4220-8FC5-3F8FBC4F3EFC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAppsAsMicroService", "SampleAppsAsMicroService\SampleAppsAsMicroService.csproj", "{2C130C5F-38DC-4F29-A1A9-CB497E87B7A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAppsAsMicroService", "SampleAppsAsMicroService\SampleAppsAsMicroService.csproj", "{2C130C5F-38DC-4F29-A1A9-CB497E87B7A6}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{9D1EE9AD-6912-4990-B877-DA7F5A0D6E6D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoAuthorizationServer", "DemoAuthorizationServer\DemoAuthorizationServer.csproj", "{137F32B9-4BC8-4D9F-832E-68B6F63703BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{9D1EE9AD-6912-4990-B877-DA7F5A0D6E6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D1EE9AD-6912-4990-B877-DA7F5A0D6E6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D1EE9AD-6912-4990-B877-DA7F5A0D6E6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{137F32B9-4BC8-4D9F-832E-68B6F63703BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{137F32B9-4BC8-4D9F-832E-68B6F63703BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{137F32B9-4BC8-4D9F-832E-68B6F63703BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{137F32B9-4BC8-4D9F-832E-68B6F63703BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
