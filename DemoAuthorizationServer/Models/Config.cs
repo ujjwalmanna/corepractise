@@ -27,7 +27,8 @@ namespace DemoAuthorizationServer.Models
                         new Claim("given_name","Test"),
                         new Claim("family_name","manna"),
                         new Claim("email","abc@test.com"),
-                        new Claim("age","10")
+                        new Claim("age","10"),
+                        new Claim("role","admin")
                     }
                 },
                 new TestUser
@@ -40,7 +41,8 @@ namespace DemoAuthorizationServer.Models
                         new Claim("given_name","Sam"),
                         new Claim("family_name","paul"),
                         new Claim("email","xyz@test.com"),
-                        new Claim("age","20")
+                        new Claim("age","20"),
+                        new Claim("role","normal")
                     }
                 }
             };
@@ -53,7 +55,18 @@ namespace DemoAuthorizationServer.Models
                 new IdentityResources.OpenId(),
                 new IdentityResources.Profile(),
                 new IdentityResources.Email(),
-                new Age()
+                new Age(),
+                new IdentityResource("roles","your's role",new List<string>() {"role" })
+            };
+        }
+
+        public static IEnumerable<ApiResource> GetApiResources()
+        {
+            return new List<ApiResource>
+            {
+
+                new ApiResource("sampleapi", "Sample API",
+                    new List<string>() {"role" } )
             };
         }
 
@@ -79,7 +92,9 @@ namespace DemoAuthorizationServer.Models
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Email,
-                        "age"
+                        "age",
+                        "roles",
+                        "sampleapi"
                     },
                     ClientSecrets =
                     {

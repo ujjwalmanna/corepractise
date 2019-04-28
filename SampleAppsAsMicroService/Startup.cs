@@ -4,11 +4,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using IdentityModel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using SampleAppsAsMicroService.Efs;
 using SampleAppsAsMicroService.Models;
 using SampleAppsAsMicroService.Repositories;
@@ -44,7 +47,10 @@ namespace SampleAppsAsMicroService
                     options.DefaultScheme = "Cookies";
                     options.DefaultChallengeScheme = "oidc";
                 })
-                .AddCookie("Cookies")
+                .AddCookie("Cookies", (options) =>
+                {
+                    options.AccessDeniedPath = "/authorization/accessdenied";
+                })
                 .AddOpenIdConnect("oidc", options =>
                 {
                     options.RequireHttpsMetadata = true;
@@ -55,29 +61,58 @@ namespace SampleAppsAsMicroService
                     options.Scope.Add("profile");
                     options.Scope.Add("email");
                     options.Scope.Add("age");
+                    options.Scope.Add("roles");
+                    options.Scope.Add("sampleapi");
                     options.ResponseType = "code id_token";
                     options.SaveTokens = true;
                     options.ClientSecret = "secret";
+                    
                     options.GetClaimsFromUserInfoEndpoint = true;
-                    options.Events = new OpenIdConnectEvents()
+                    options.ClaimActions.MapUniqueJsonKey("role", "role");
+                    options.ClaimActions.Remove("amr");
+                    options.ClaimActions.DeleteClaim("sid");
+                    options.ClaimActions.DeleteClaim("idp");
+                    options.ClaimActions.DeleteClaim("email");
+
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        OnTokenValidated = tokenValidatedContext =>
-                        {
-                            var identity = tokenValidatedContext.Principal.Identity as ClaimsIdentity;
-                            var subClaims = identity.Claims.FirstOrDefault(c => c.Type == "sub");
-                            var newClaimIdentity=new ClaimsIdentity(tokenValidatedContext.Scheme.Name,"given_name","role");
-                            newClaimIdentity.AddClaim(subClaims);
-                            return Task.FromResult(0);
-                        },
-                        OnUserInformationReceived = userInformationReceivedContext=>
-                        {
-                            userInformationReceivedContext.User.Remove("email");
-                            userInformationReceivedContext.User.Remove("age");
-                            return Task.FromResult(0);
-                        }
+                        NameClaimType = JwtClaimTypes.GivenName,
+                        RoleClaimType = JwtClaimTypes.Role,
                     };
 
+
+                    //options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    //{
+                    //    RoleClaimType = JwtClaimTypes.Role,
+                    //    NameClaimType = JwtClaimTypes.GivenName
+                    //};
+                    //options.Events = new OpenIdConnectEvents()
+                    //{
+                    //    OnTokenValidated = tokenValidatedContext =>
+                    //    {
+                    //        var identity = tokenValidatedContext.Principal.Identity as ClaimsIdentity;
+                    //        var subClaims = identity.Claims.FirstOrDefault(c => c.Type == "sub");
+                    //        var newClaimIdentity=new ClaimsIdentity(tokenValidatedContext.Scheme.Name,"given_name","role");
+                    //        newClaimIdentity.AddClaim(subClaims);
+                    //        tokenValidatedContext = new TokenValidatedContext(tokenValidatedContext.HttpContext,
+                    //            tokenValidatedContext.Scheme,
+                    //            tokenValidatedContext.Options,
+                    //            new ClaimsPrincipal(newClaimIdentity),
+                    //            tokenValidatedContext.Properties);
+
+
+                    //        return Task.FromResult(0);
+                    //    },
+                    //    OnUserInformationReceived = userInformationReceivedContext=>
+                    //    {
+                    //        userInformationReceivedContext.User.Remove("email");
+                    //        //userInformationReceivedContext.User.Remove("age");
+                    //        return Task.FromResult(0);
+                    //    }
+                    //};
+
                 });
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             //    .AddCookie("cookies", options =>
             //{

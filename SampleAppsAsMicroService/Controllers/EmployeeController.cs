@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Transactions;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -69,6 +71,23 @@ namespace SampleAppsAsMicroService.Controllers
             {
                 Debug.WriteLine($"claim type =>{claim.Type}  value =>{claim.Value}");
             }
+
+            //var client = new HttpClient();
+
+            //var disco = await client.GetDiscoveryDocumentAsync("https://localhost:44391/");
+            //var accessToken = await HttpContext.GetTokenAsync("access_token");
+            //client.SetBearerToken(accessToken);
+
+
+
+            //var useClient = await client.GetUserInfoAsync(new UserInfoRequest
+            //{
+            //    Address = disco.UserInfoEndpoint,
+            //    Token = accessToken
+            //});
+
+            //var claims = useClient.Claims;
+
         }
     }
 }

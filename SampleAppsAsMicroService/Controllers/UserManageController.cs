@@ -1,21 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace SampleAppsAsMicroService.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class UserManageController : Controller
     {
         // GET: api/<controller>
         [HttpGet]
-        public IEnumerable<string> Get()
+        //[Authorize(Roles="admin,normal")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> Get()
         {
-            return new string[] { "value1", "value2" };
+            var client = new HttpClient();
+
+            var disco = await client.GetDiscoveryDocumentAsync("https://localhost:44391/");
+            var iToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
+
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            client.SetBearerToken(accessToken);
+
+
+
+            var useClient = await client.GetUserInfoAsync(new UserInfoRequest
+            {
+                Address = disco.UserInfoEndpoint,
+                Token = accessToken
+            });
+
+            var claims = useClient.Claims;
+
+            return Ok(claims);
+
         }
 
         // GET api/<controller>/5
