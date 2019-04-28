@@ -40,6 +40,16 @@ namespace SampleAppsAsMicroService
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddDbContext<EfContext>(db => db.UseSqlServer(Configuration.GetConnectionString("PlaygroundDB")));
             services.AddTransient(typeof(IRepository<,>), typeof(Repository<,>));
+            services.AddAuthorization(authrizationoptions =>
+            {
+                authrizationoptions.AddPolicy("userpolicy", pb =>
+                {
+                    pb.RequireAuthenticatedUser();
+                    pb.RequireRole("admin");
+                    pb.RequireClaim("country", "in");
+                    pb.RequireClaim("subscriptionlevel", "admin");
+                });
+            });
             // services.AddTransient<IRepository<JobRole,int>>(s => new Repository<JobRole,int>());
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             services.AddAuthentication(options =>
@@ -63,16 +73,23 @@ namespace SampleAppsAsMicroService
                     options.Scope.Add("age");
                     options.Scope.Add("roles");
                     options.Scope.Add("sampleapi");
+                    options.Scope.Add("country");
+                    options.Scope.Add("subscriptionlevel");
                     options.ResponseType = "code id_token";
                     options.SaveTokens = true;
                     options.ClientSecret = "secret";
                     
                     options.GetClaimsFromUserInfoEndpoint = true;
-                    options.ClaimActions.MapUniqueJsonKey("role", "role");
                     options.ClaimActions.Remove("amr");
                     options.ClaimActions.DeleteClaim("sid");
                     options.ClaimActions.DeleteClaim("idp");
                     options.ClaimActions.DeleteClaim("email");
+
+                    options.ClaimActions.MapUniqueJsonKey("role", "role");
+                    options.ClaimActions.MapUniqueJsonKey("subscriptionlevel", "subscriptionlevel");
+                    options.ClaimActions.MapUniqueJsonKey("country", "country");
+                    options.ClaimActions.MapUniqueJsonKey("age", "age");
+
 
                     options.TokenValidationParameters = new TokenValidationParameters
                     {

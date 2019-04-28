@@ -21,7 +21,7 @@ namespace SampleAppsAsMicroService.Controllers
         // GET: api/<controller>
         [HttpGet]
         //[Authorize(Roles="admin,normal")]
-        [Authorize(Roles = "admin")]
+        [Authorize(Policy = "userpolicy")]
         public async Task<IActionResult> Get()
         {
             var client = new HttpClient();

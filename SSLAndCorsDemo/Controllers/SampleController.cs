@@ -23,8 +23,10 @@ namespace SSLAndCorsDemo.Controllers
 
         [Route("api/test")]
         [Authorize(Roles = "admin")]
+        //[Authorize(Policy ="userpolicy")]
         public ActionResult<IEnumerable<string>> GetForAdmin()
         {
+            var claims = User.Claims;
             return new string[] { "test1", "test2" };
         }
 

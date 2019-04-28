@@ -28,7 +28,9 @@ namespace DemoAuthorizationServer.Models
                         new Claim("family_name","manna"),
                         new Claim("email","abc@test.com"),
                         new Claim("age","10"),
-                        new Claim("role","admin")
+                        new Claim("role","admin"),
+                        new Claim("country","in"),
+                        new Claim("subscriptionlevel","admin")
                     }
                 },
                 new TestUser
@@ -42,7 +44,9 @@ namespace DemoAuthorizationServer.Models
                         new Claim("family_name","paul"),
                         new Claim("email","xyz@test.com"),
                         new Claim("age","20"),
-                        new Claim("role","normal")
+                        new Claim("role","normal"),
+                        new Claim("country","uk"),
+                        new Claim("subscriptionlevel","normal")
                     }
                 }
             };
@@ -56,7 +60,12 @@ namespace DemoAuthorizationServer.Models
                 new IdentityResources.Profile(),
                 new IdentityResources.Email(),
                 new Age(),
-                new IdentityResource("roles","your's role",new List<string>() {"role" })
+                new IdentityResource("roles","your's role",new List<string>() {"role" }),
+
+                //added for attribute based routing
+                new IdentityResource("country","your's country",new List<string>() {"country" }),
+                new IdentityResource("subscriptionlevel","subscription",new List<string>() {"subscriptionlevel" })
+
             };
         }
 
@@ -94,7 +103,9 @@ namespace DemoAuthorizationServer.Models
                         IdentityServerConstants.StandardScopes.Email,
                         "age",
                         "roles",
-                        "sampleapi"
+                        "sampleapi",
+                        "country",
+                        "subscriptionlevel"
                     },
                     ClientSecrets =
                     {

@@ -1,4 +1,7 @@
-﻿@model object
+﻿@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService authorizationservice
+
+@model object
 
 @{
     ViewBag.Title = "title";
@@ -6,5 +9,10 @@
 }
 
 <div class="container">
+    @if((await authorizationservice.AuthorizeAsync(User, "userpolicy")).Succeeded)
+    {
+        <p>User Policy applied</p>
+
+    }
     <div class="h3">you are not authoried</div>
 </div>
