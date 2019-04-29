@@ -75,7 +75,7 @@ namespace DemoAuthorizationServer.Models
             {
 
                 new ApiResource("sampleapi", "Sample API",
-                    new List<string>() {"role" } )
+                    new List<string>() {"role","country","age" } )
             };
         }
 
