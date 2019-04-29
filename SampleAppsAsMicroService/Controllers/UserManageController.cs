@@ -29,7 +29,7 @@ namespace SampleAppsAsMicroService.Controllers
             var disco = await client.GetDiscoveryDocumentAsync("https://localhost:44391/");
             var iToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
 
-            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            var accessToken = await HttpContext.GetTokenAsync("access_token");           
             client.SetBearerToken(accessToken);
 
 

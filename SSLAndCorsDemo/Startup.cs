@@ -41,6 +41,7 @@ namespace SSLAndCorsDemo
                 {
                     options.Authority = "https://localhost:44391/";
                     options.ApiName = "sampleapi";
+                    options.ApiSecret = "apisecret";
                 });
 
         }

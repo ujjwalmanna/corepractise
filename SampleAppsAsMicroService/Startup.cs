@@ -75,6 +75,8 @@ namespace SampleAppsAsMicroService
                     options.Scope.Add("sampleapi");
                     options.Scope.Add("country");
                     options.Scope.Add("subscriptionlevel");
+
+                    options.Scope.Add("offline_access");
                     options.ResponseType = "code id_token";
                     options.SaveTokens = true;
                     options.ClientSecret = "secret";

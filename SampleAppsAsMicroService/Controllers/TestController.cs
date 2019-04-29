@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -33,9 +35,20 @@ namespace SampleAppsAsMicroService.Controllers
             // get the current HttpContext to access the tokens
             var currentContext = _httpContextAccessor.HttpContext;
 
-            // get access token
-            accessToken = await currentContext.GetTokenAsync(
-                OpenIdConnectParameterNames.AccessToken);
+            var expires_at = await currentContext.GetTokenAsync("expires_at");
+
+            if (string.IsNullOrWhiteSpace(expires_at) || DateTime.Parse(expires_at).AddSeconds(-60).ToUniversalTime() < DateTime.UtcNow)
+            {
+                accessToken = await RenewTokens();
+                //var cp = await RenewTokens1();
+            }
+            else
+            {
+
+                // get access token
+                accessToken = await currentContext.GetTokenAsync(
+                    OpenIdConnectParameterNames.AccessToken);
+            }
 
             if (!string.IsNullOrWhiteSpace(accessToken))
             {
@@ -50,10 +63,128 @@ namespace SampleAppsAsMicroService.Controllers
 
             return _httpClient;
         }
-    
 
-    // GET api/values
-    [HttpGet]
+        private async Task<string> RenewTokens()
+        {
+            var currentContext = _httpContextAccessor.HttpContext;
+            var discoveryClient = new DiscoveryClient("https://localhost:44391/");
+            var metaDataResponse = await discoveryClient.GetAsync();
+
+            var tokenClient = new TokenClient(metaDataResponse.TokenEndpoint, "mp1", "secret");
+
+            var currentRefreshToken = await currentContext.GetTokenAsync(OpenIdConnectParameterNames.RefreshToken);
+           
+            var tokenResult = await tokenClient.RequestRefreshTokenAsync(currentRefreshToken);
+            if (!tokenResult.IsError)
+            {
+                var updatedToken = new List<AuthenticationToken>();
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = OpenIdConnectParameterNames.IdToken,
+                    Value = tokenResult.IdentityToken
+                });
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = OpenIdConnectParameterNames.AccessToken,
+                    Value = tokenResult.AccessToken
+                });
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = OpenIdConnectParameterNames.RefreshToken,
+                    Value = tokenResult.RefreshToken
+                });
+                var expiresAt = DateTime.UtcNow + TimeSpan.FromSeconds(tokenResult.ExpiresIn);
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = "expires_at",
+                    Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
+                });
+
+                var currentAuthenticationResult = await currentContext.AuthenticateAsync("Cookies");
+                currentAuthenticationResult.Properties.StoreTokens(updatedToken);
+                await currentContext.SignInAsync("Cookies", currentAuthenticationResult.Principal, currentAuthenticationResult.Properties);
+                return tokenResult.AccessToken;
+            }
+            else
+                throw new Exception("Error in renew=>",tokenResult.Exception);
+
+        }
+
+        private async Task<string> RenewTokens1()
+        {
+            var currentContext = _httpContextAccessor.HttpContext;
+
+            var disco = await _httpClient.GetDiscoveryDocumentAsync("https://localhost:44391/");
+            var tokenEndpoint = disco.TokenEndpoint;
+            var response1 = await _httpClient.RequestTokenAsync(new TokenRequest
+            {
+                Address = tokenEndpoint,
+                ClientId = "mp1",
+                ClientSecret = "secret",
+                GrantType = OpenIdConnectGrantTypes.RefreshToken,
+                Parameters =
+                {
+        
+                    { "scope", "sampleapi" }
+                }
+
+            });
+
+            var response= await _httpClient.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = tokenEndpoint,
+                ClientId = "mp1",
+                ClientSecret = "secret",
+                Scope="sampleapi",
+                GrantType=OpenIdConnectGrantTypes.ClientCredentials
+            });
+
+            var tokenResult = await _httpClient.RequestRefreshTokenAsync(new RefreshTokenRequest
+            {
+                Address = tokenEndpoint,
+                ClientId = "mp1",
+                ClientSecret = "secret",
+                RefreshToken = "refresh_token"
+            });
+
+             if (!tokenResult.IsError)
+            {
+                var updatedToken = new List<AuthenticationToken>();
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = OpenIdConnectParameterNames.IdToken,
+                    Value = tokenResult.IdentityToken
+                });
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = OpenIdConnectParameterNames.AccessToken,
+                    Value = tokenResult.AccessToken
+                });
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = OpenIdConnectParameterNames.RefreshToken,
+                    Value = tokenResult.RefreshToken
+                });
+                var expiresAt = DateTime.UtcNow + TimeSpan.FromSeconds(tokenResult.ExpiresIn);
+                updatedToken.Add(new AuthenticationToken
+                {
+                    Name = "expires_at",
+                    Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
+                });
+
+                var currentAuthenticationResult = await currentContext.AuthenticateAsync("Cookies");
+                currentAuthenticationResult.Properties.StoreTokens(updatedToken);
+                await currentContext.SignInAsync("Cookies", currentAuthenticationResult.Principal, currentAuthenticationResult.Properties);
+                return tokenResult.AccessToken;
+            }
+            else
+                throw new Exception("Error in renew=>", tokenResult.Exception);
+
+        }
+
+
+        // GET api/values
+        [HttpGet]
         public async Task<IActionResult> Get()
         {
             await WriteOutIdentityInformation();

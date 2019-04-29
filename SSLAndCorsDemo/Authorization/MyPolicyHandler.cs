@@ -18,7 +18,7 @@ namespace SSLAndCorsDemo.Authorization
                 return Task.CompletedTask;
             };
             //var data = fliterContext.RouteData.Values["id"].ToString();
-            var cliam = context.User.Claims.FirstOrDefault(c => c.Value == "country").Value; ;
+            var cliam = context.User.Claims.FirstOrDefault(c => c.Type == "country").Value; ;
             if(cliam != "in")
             {
                 context.Fail();

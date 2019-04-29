@@ -76,6 +76,9 @@ namespace DemoAuthorizationServer.Models
 
                 new ApiResource("sampleapi", "Sample API",
                     new List<string>() {"role","country","age" } )
+                {
+                    ApiSecrets={new Secret("apisecret".Sha256())}
+                }
             };
         }
 
@@ -88,6 +91,14 @@ namespace DemoAuthorizationServer.Models
                     ClientName = "MP Trader",
                     ClientId = "mp1",
                     AllowedGrantTypes = GrantTypes.Hybrid,
+                    //IdentityTokenLifetime
+                    //AuthorizationCodeLifetime
+                    AccessTokenLifetime=120,
+                    AllowOfflineAccess=true,
+                    //AbsoluteRefreshTokenLifetime
+                    UpdateAccessTokenClaimsOnRefresh=true,
+                    //
+                    AccessTokenType =AccessTokenType.Reference,
                     RedirectUris = new List<string>()
                     {
                         "https://localhost:44369/signin-oidc"
