@@ -97,6 +97,8 @@ namespace DemoAuthorizationServer.Models
                     AllowOfflineAccess=true,
                     //AbsoluteRefreshTokenLifetime
                     UpdateAccessTokenClaimsOnRefresh=true,
+
+                    RequireConsent = false,
                     //
                     AccessTokenType =AccessTokenType.Reference,
                     RedirectUris = new List<string>()

@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DemoAuthorizationServer.Entities;
+using DemoAuthorizationServer.Extensions;
 using DemoAuthorizationServer.Models;
+using DemoAuthorizationServer.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -29,16 +33,18 @@ namespace DemoAuthorizationServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddDbContext<EFUserContext>(db => db.UseSqlServer(Configuration.GetConnectionString("IDPUserDB")));
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
-                .AddTestUsers(Config.GetUsers())
+                .AddUserStore() // replaced by .AddTestUsers(Config.GetUsers())
                 .AddInMemoryIdentityResources(Config.GetIdentityResource())
                 .AddInMemoryApiResources(Config.GetApiResources())
                 .AddInMemoryClients(Config.GetClients());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env,EFUserContext userContext)
         {
             if (env.IsDevelopment())
             {
@@ -48,7 +54,8 @@ namespace DemoAuthorizationServer
             {
                 app.UseHsts();
             }
-
+            userContext.Database.Migrate();
+            userContext.EnsureSeedDataForContext();
             app.UseIdentityServer();
             
             
