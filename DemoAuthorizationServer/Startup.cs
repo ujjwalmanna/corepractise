@@ -33,6 +33,11 @@ namespace DemoAuthorizationServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.Configure<IISOptions>(iis =>
+            {
+                iis.AuthenticationDisplayName = "Windows";
+                iis.AutomaticAuthentication = false;
+            });
             services.AddDbContext<EFUserContext>(db => db.UseSqlServer(Configuration.GetConnectionString("IDPUserDB")));
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddIdentityServer()

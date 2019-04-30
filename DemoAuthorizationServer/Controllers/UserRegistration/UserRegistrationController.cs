@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DemoAuthorizationServer.Entities;
 using DemoAuthorizationServer.Models;
 using DemoAuthorizationServer.Services;
 using IdentityServer4.Services;
@@ -22,10 +23,14 @@ namespace DemoAuthorizationServer.Controllers.UserRegistration
         }
 
         [HttpGet]
-        public IActionResult RegisterUser(string returnUrl)
+        public IActionResult RegisterUser(RegistrationInputModel registrationInputModel)
         {
-            var vm = new RegisterUserViewModel()
-                { ReturnUrl = returnUrl };
+            var vm = new RegisterUserViewModel
+            {
+                ReturnUrl = registrationInputModel.ReturnUrl,
+                Provider = registrationInputModel.Provider,
+                ProviderUserId = registrationInputModel.ProviderUserId
+            };
             return View(vm);
         }
 
@@ -47,6 +52,14 @@ namespace DemoAuthorizationServer.Controllers.UserRegistration
                 userToCreate.Claims.Add(new Entities.UserClaim("email", model.Email));
                 userToCreate.Claims.Add(new Entities.UserClaim("subscriptionlevel", "normal"));
                 userToCreate.Claims.Add(new Entities.UserClaim("age", model.Age));
+                if (model.IsProvisioningFromExternal)
+                {
+                    userToCreate.Logins.Add(new UserLogin
+                    {
+                        LoginProvider = model.Provider,
+                        ProviderKey = model.ProviderUserId
+                    });
+                }
 
                 // add it through the repository
                 _userRepository.AddUser(userToCreate);
@@ -58,8 +71,10 @@ namespace DemoAuthorizationServer.Controllers.UserRegistration
 
                 // log the user in
                 //await HttpContext.Authentication.SignInAsync(userToCreate.SubjectId, userToCreate.Username);
-
-                await HttpContext.SignInAsync(userToCreate.SubjectId, userToCreate.Username);
+                if (!model.IsProvisioningFromExternal)
+                {
+                    await HttpContext.SignInAsync(userToCreate.SubjectId, userToCreate.Username);
+                }
 
                 // continue with the flow     
                 if (_interaction.IsValidReturnUrl(model.ReturnUrl) || Url.IsLocalUrl(model.ReturnUrl))

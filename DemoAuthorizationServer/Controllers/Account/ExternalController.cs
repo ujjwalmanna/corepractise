@@ -4,6 +4,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
+using DemoAuthorizationServer.Entities;
+using DemoAuthorizationServer.Services;
 using IdentityModel;
 using IdentityServer4.Events;
 using IdentityServer4.Services;
@@ -20,21 +22,21 @@ namespace DemoAuthorizationServer.Controllers.Account
     [AllowAnonymous]
     public class ExternalController : Controller
     {
-        private readonly TestUserStore _users;
+       // private readonly TestUserStore _users;
         private readonly IIdentityServerInteractionService _interaction;
         private readonly IClientStore _clientStore;
         private readonly IEventService _events;
+        private readonly IUserRepository _usersRepository;
 
         public ExternalController(
             IIdentityServerInteractionService interaction,
             IClientStore clientStore,
             IEventService events,
-            TestUserStore users = null)
+            IUserRepository usersRepository)
         {
             // if the TestUserStore is not in DI, then we'll just use the global users collection
             // this is where you would plug in your own custom identity management library (e.g. ASP.NET Identity)
-            _users = users ?? new TestUserStore(TestUsers.Users);
-
+            _usersRepository = usersRepository;
             _interaction = interaction;
             _clientStore = clientStore;
             _events = events;
@@ -77,6 +79,8 @@ namespace DemoAuthorizationServer.Controllers.Account
             }
         }
 
+      
+
         /// <summary>
         /// Post processing of external authentication
         /// </summary>
@@ -85,6 +89,9 @@ namespace DemoAuthorizationServer.Controllers.Account
         {
             // read external identity from the temporary cookie
             var result = await HttpContext.AuthenticateAsync(IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme);
+
+            var returnUrl = result.Properties.Items["returnUrl"] ?? "~/";
+
             if (result?.Succeeded != true)
             {
                 throw new Exception("External authentication error");
@@ -97,7 +104,15 @@ namespace DemoAuthorizationServer.Controllers.Account
                 // this might be where you might initiate a custom workflow for user registration
                 // in this sample we don't show how that would be done, as our sample implementation
                 // simply auto-provisions new external user
-                user = AutoProvisionUser(provider, providerUserId, claims);
+                //user = AutoProvisionUser(provider, providerUserId, claims);
+                var returnUrlAfterRegistration = Url.Action(nameof(Callback));
+                var continueUrl = Url.Action("RegisterUser", "UserRegistration",new
+                {
+                    returnUrl=returnUrlAfterRegistration,
+                    provider=provider,
+                    providerUserId=providerUserId
+                });
+                return Redirect(continueUrl);
             }
 
             // this allows us to collect any additonal claims or properties
@@ -117,8 +132,7 @@ namespace DemoAuthorizationServer.Controllers.Account
             await HttpContext.SignOutAsync(IdentityServer4.IdentityServerConstants.ExternalCookieAuthenticationScheme);
 
             // retrieve return URL
-            var returnUrl = result.Properties.Items["returnUrl"] ?? "~/";
-
+           
             // check if external login is in the context of an OIDC request
             var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
             if (context != null)
@@ -181,7 +195,7 @@ namespace DemoAuthorizationServer.Controllers.Account
             }
         }
 
-        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserFromExternalProvider(AuthenticateResult result)
+        private (User user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserFromExternalProvider(AuthenticateResult result)
         {
             var externalUser = result.Principal;
 
@@ -200,14 +214,14 @@ namespace DemoAuthorizationServer.Controllers.Account
             var providerUserId = userIdClaim.Value;
 
             // find external user
-            var user = _users.FindByExternalProvider(provider, providerUserId);
+            var user = _usersRepository.GetUserByProvider(provider, providerUserId); //_users.FindByExternalProvider(provider, providerUserId);
 
             return (user, provider, providerUserId, claims);
         }
 
-        private TestUser AutoProvisionUser(string provider, string providerUserId, IEnumerable<Claim> claims)
+        private User AutoProvisionUser(string provider, string providerUserId, IEnumerable<Claim> claims)
         {
-            var user = _users.AutoProvisionUser(provider, providerUserId, claims.ToList());
+            var user = _usersRepository.GetUserByProvider(provider, providerUserId); //_users.AutoProvisionUser(provider, providerUserId, claims.ToList());
             return user;
         }
 
