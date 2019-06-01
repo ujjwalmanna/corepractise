@@ -6,13 +6,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Views\BuiltInTag\**" />
+    <Compile Remove="Views\Speaker\**" />
+    <Content Remove="Views\BuiltInTag\**" />
+    <Content Remove="Views\Speaker\**" />
+    <EmbeddedResource Remove="Views\BuiltInTag\**" />
+    <EmbeddedResource Remove="Views\Speaker\**" />
+    <None Remove="Views\BuiltInTag\**" />
+    <None Remove="Views\Speaker\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Controllers\SpeakerController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.7" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\corepractise\TagHelperLib\TagHelperLib.csproj" />
+    <ProjectReference Include="..\TagHelperLib\TagHelperLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
